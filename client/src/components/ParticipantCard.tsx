@@ -139,21 +139,36 @@ export default function ParticipantCard({
     onWalletConnected(walletAddress);
   };
   
-  const handleMintNft = () => {
+  const handleMintNft = async () => {
     setIsMinting(true);
     
-    // ダミー実装: ミント処理の遅延をシミュレート
-    setTimeout(() => {
-      setIsMinting(false);
+    try {
+      // 本実装では以下を使用
+      // import { mintEventNFT } from '@/lib/events';
+      // const { executeTransaction } = useWallet();
+      // const result = await mintEventNFT(
+      //   event?.id?.toString() || '0',
+      //   walletAddress,
+      //   executeTransaction
+      // );
+      
+      // ダミー実装: ミント処理の遅延をシミュレート
+      await new Promise(resolve => setTimeout(resolve, 2500));
       setMintSuccess(true);
       
       // ダミーのトランザクションID
       const mockTxId = "0x" + Math.random().toString(16).slice(2, 62);
       onNFTMinted(mockTxId);
-    }, 2500);
-    
-    // API呼び出しはコメントアウト
-    // mintNftMutation.mutate();
+    } catch (error) {
+      toast({
+        title: "ミントエラー",
+        description: "NFTのミントに失敗しました。もう一度お試しください。",
+        variant: "destructive",
+      });
+      console.error("Mint error:", error);
+    } finally {
+      setIsMinting(false);
+    }
   };
   
   // Helper to get step title
@@ -265,28 +280,27 @@ export default function ParticipantCard({
               </div>
             </div>
             
-            {!isConnectingWallet ? (
-              <Button
-                className="w-full py-3 bg-primary hover:bg-primary-dark"
-                onClick={handleConnectWallet}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                ウォレットを接続する
-              </Button>
-            ) : (
-              <div className="text-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
-                <p className="text-gray-600">ウォレット接続中...</p>
-              </div>
-            )}
+            <WalletConnector 
+              className="mt-4" 
+              onWalletConnected={handleConnectWallet} 
+            />
           </div>
         )}
         
         {/* Step 3: NFT Mint */}
         {step === "mint" && (
           <div className="space-y-4">
+            {/* ウォレット情報の表示 */}
+            <div className="bg-blue-50 p-4 rounded-lg mb-4">
+              <h4 className="text-sm font-medium text-blue-800 mb-2">ウォレット情報</h4>
+              <div className="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <p className="text-sm text-gray-700 font-mono">{walletAddress}</p>
+              </div>
+            </div>
+            
             <div className="flex justify-center mb-6">
               <div className="bg-gray-100 rounded-lg overflow-hidden w-48 h-48 flex items-center justify-center">
                 {event?.nftImageUrl ? (
@@ -303,11 +317,19 @@ export default function ParticipantCard({
               </div>
             </div>
             
+            <div className="space-y-2">
+              <h4 className="text-lg font-medium">{event?.nftName || "イベント参加証NFT"}</h4>
+              <p className="text-sm text-gray-600">{event?.nftDescription || "このNFTはイベント参加の証明として発行されます。"}</p>
+            </div>
+            
             {!isMinting && !mintSuccess && (
               <Button
                 className="w-full py-3 bg-primary hover:bg-primary-dark"
                 onClick={handleMintNft}
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
                 NFTをミントする
               </Button>
             )}
@@ -316,6 +338,7 @@ export default function ParticipantCard({
               <div className="text-center py-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
                 <p className="text-gray-600">NFTをミント中...</p>
+                <p className="text-xs text-gray-500 mt-1">ウォレットの承認が必要な場合があります</p>
               </div>
             )}
             
@@ -329,7 +352,10 @@ export default function ParticipantCard({
                 <h4 className="text-lg font-medium text-gray-800 mb-1">NFTのミントが完了しました！</h4>
                 <p className="text-gray-600">参加証NFTがウォレットに追加されました。ご参加ありがとうございます！</p>
                 {transactionId && (
-                  <p className="text-xs text-gray-500 mt-2">Transaction ID: {transactionId}</p>
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs text-gray-700 font-medium mb-1">トランザクション情報</p>
+                    <p className="text-xs font-mono text-gray-500 break-all">{transactionId}</p>
+                  </div>
                 )}
               </div>
             )}
