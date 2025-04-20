@@ -54,16 +54,27 @@ export async function verifyEventPassphrase(passphrase: string) {
 export async function mintEventNFT(
   eventId: string,
   walletAddress: string,
-  executeTransaction: (transaction: Transaction) => Promise<any>
+  executeTransaction: ((transaction: Transaction) => Promise<any>) | null,
+  createOnly: boolean = false
 ) {
   try {
-    // コントラクトを使用してNFTをミント
-    const result = await mintNFT(eventId, executeTransaction);
+    // スポンサートランザクション用のトランザクション作成モード
+    if (createOnly && !executeTransaction) {
+      // トランザクションを作成するが実行しない
+      const tx = await mintNFT(eventId, null, true); // トランザクション作成のみ
+      return tx; // トランザクションオブジェクトを返す
+    }
     
-    return {
-      success: result.success,
-      transactionId: result.transactionId,
-    };
+    // 通常のトランザクション実行モード
+    if (executeTransaction) {
+      const result = await mintNFT(eventId, executeTransaction);
+      return {
+        success: result.success,
+        transactionId: result.transactionId,
+      };
+    }
+    
+    throw new Error('executeTransaction が必要です');
   } catch (error) {
     console.error('Error minting NFT:', error);
     throw error;

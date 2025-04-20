@@ -11,6 +11,8 @@ import WalletConnector from "./WalletConnector";
 import { mintEventNFT } from "@/lib/events";
 import { useWallet } from "@/hooks/useWallet";
 import { CONTRACT_CONFIG } from "@/lib/contracts";
+import { useSponsoredTx } from "@/hooks/useSponsoredTx";
+import { AlertCircle, CheckCircle2, Info } from "lucide-react";
 
 type ParticipantCardProps = {
   step: string;
@@ -145,6 +147,32 @@ export default function ParticipantCard({
   // Wallet Hook
   const wallet = useWallet();
   
+  // スポンサードトランザクションフック
+  const { 
+    isChecking,
+    isEligible,
+    isPreparing,
+    isSigning,
+    isExecuting,
+    error: sponsorError,
+    transactionId: sponsorTxId,
+    isLoading: sponsorLoading,
+    executeSponsoredTx
+  } = useSponsoredTx({
+    eventId: event?.id?.toString() || '1',
+    onSuccess: (txId) => {
+      setMintSuccess(true);
+      onNFTMinted(txId);
+    },
+    onError: (error) => {
+      toast({
+        title: "スポンサートランザクションエラー",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
   // NFTミント関数
   const handleMintNft = async () => {
     setIsMinting(true);
@@ -154,12 +182,44 @@ export default function ParticipantCard({
         throw new Error('イベントIDが見つかりません');
       }
       
-      // テストネットでの連携テスト用
-      // 注意: この実装はテストネットでのみ動作します
+      // 現時点では仮想的なイベントIDを使用
+      const eventIdOnChain = CONTRACT_CONFIG.EVENT_MANAGER_ID;
+      
+      // ガススポンサー機能が有効かどうかを確認
+      const useSponsoring = event.gasSponsored === true;
+      
+      if (useSponsoring) {
+        // スポンサードトランザクションを使用してミント
+        try {
+          // トランザクションを作成
+          const tx = await mintEventNFT(
+            eventIdOnChain,
+            walletAddress,
+            null, // 実行は executeSponsoredTx で行うため null を渡す
+            true  // トランザクション作成のみ
+          );
+          
+          if (tx) {
+            // スポンサードトランザクションとして実行
+            const txId = await executeSponsoredTx(tx);
+            if (!txId) {
+              throw new Error('スポンサードトランザクションの実行に失敗しました');
+            }
+            // 処理は useSponsoredTx のコールバックで行われる
+            return;
+          }
+        } catch (sponsorError) {
+          console.warn("Sponsored transaction failed, falling back to regular transaction", sponsorError);
+          toast({
+            title: "スポンサートランザクション失敗",
+            description: "通常のトランザクションに切り替えます。ガス代が必要です。",
+            variant: "warning",
+          });
+        }
+      }
+      
+      // 通常のトランザクションを使用してミント（スポンサリングが無効か失敗した場合）
       try {
-        // 現時点では仮想的なイベントIDを使用
-        const eventIdOnChain = CONTRACT_CONFIG.EVENT_MANAGER_ID;
-        
         // Suiブロックチェーンにトランザクションを送信
         const result = await mintEventNFT(
           eventIdOnChain,

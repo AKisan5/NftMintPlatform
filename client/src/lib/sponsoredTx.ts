@@ -1,6 +1,7 @@
 import { Transaction } from '@mysten/sui/transactions';
 import { SuiClient } from '@mysten/sui/client';
 import { suiClient } from './suiClient';
+import { getEventGasAllocation } from './gasStation';
 
 /**
  * スポンサードトランザクション機能
@@ -13,6 +14,46 @@ interface SponsoredTxConfig {
   gasBudget: bigint;     // トランザクションごとのガス予算
   sponsorAddress: string; // スポンサーのアドレス
   eventId: string;       // イベントID
+}
+
+/**
+ * トランザクションがスポンサー対象かどうかを確認
+ * @param eventId イベントID
+ * @param estimatedGas 推定ガス使用量
+ * @returns スポンサー対象かどうか
+ */
+export async function checkSponsorEligibility(
+  eventId: string,
+  estimatedGas: bigint
+): Promise<{ eligible: boolean; reason?: string }> {
+  try {
+    // イベントのガス割り当てを取得
+    const allocation = await getEventGasAllocation(eventId);
+    
+    // スポンサー対象かどうかをチェック
+    if (!allocation.isActive) {
+      return { eligible: false, reason: 'イベントのガススポンサー機能が無効です' };
+    }
+    
+    if (estimatedGas > allocation.maxGasPerTx) {
+      return { 
+        eligible: false, 
+        reason: `トランザクションのガス使用量が上限を超えています (${estimatedGas} > ${allocation.maxGasPerTx})` 
+      };
+    }
+    
+    if (estimatedGas > allocation.remainingAllocation) {
+      return { 
+        eligible: false, 
+        reason: 'イベントの残りガス割り当てが不足しています' 
+      };
+    }
+    
+    return { eligible: true };
+  } catch (error) {
+    console.error(`Failed to check sponsor eligibility for event ${eventId}:`, error);
+    return { eligible: false, reason: 'ガスステーションの確認中にエラーが発生しました' };
+  }
 }
 
 /**
