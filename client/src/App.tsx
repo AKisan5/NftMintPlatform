@@ -8,6 +8,15 @@ import EventManagement from "@/pages/EventManagement";
 import EventParticipant from "@/pages/EventParticipant";
 import Home from "@/pages/Home";
 
+// Sui Wallet プロバイダーのインポート
+import { 
+  WalletKitProvider, 
+  SuiClientProvider,
+  WalletProvider
+} from '@mysten/dapp-kit';
+import { getFullnodeUrl } from '@mysten/sui/client';
+import { SuiNetwork } from './lib/suiClient';
+
 function Router() {
   return (
     <Switch>
@@ -20,14 +29,23 @@ function Router() {
 }
 
 function App() {
+  // Sui ネットワークの設定
+  const networks = {
+    testnet: { url: getFullnodeUrl('testnet') }
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <div className="min-h-screen" style={{ background: "linear-gradient(to bottom, #EFF6FF, white)" }}>
-          <Toaster />
-          <Router />
-        </div>
-      </TooltipProvider>
+      <SuiClientProvider networks={networks} defaultNetwork="testnet">
+        <WalletProvider>
+          <TooltipProvider>
+            <div className="min-h-screen" style={{ background: "linear-gradient(to bottom, #EFF6FF, white)" }}>
+              <Toaster />
+              <Router />
+            </div>
+          </TooltipProvider>
+        </WalletProvider>
+      </SuiClientProvider>
     </QueryClientProvider>
   );
 }
