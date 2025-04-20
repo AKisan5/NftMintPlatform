@@ -103,7 +103,33 @@ export default function ParticipantCard({
       return;
     }
     
-    verifyPassphraseMutation.mutate(passphrase);
+    // ダミー実装: 合言葉「aikotoba」のみを受け付ける
+    if (passphrase === "aikotoba") {
+      setPassphraseError(false);
+      setPassphraseSuccess(true);
+      
+      // ダミーイベントデータ
+      const dummyEvent = {
+        id: 1,
+        eventName: "Tech Conference 2025",
+        eventDetails: "最新技術のカンファレンスです。参加者には限定NFTが発行されます。",
+        mintStartDate: new Date("2025/04/20 10:00"),
+        mintEndDate: new Date("2025/04/30 18:00"),
+        nftName: "Tech Conference 2025 参加証",
+        nftDescription: "このNFTは2025年テクノロジーカンファレンスへの参加を証明するものです。",
+        gasSponsored: true
+      };
+      
+      setTimeout(() => {
+        onPassphraseVerified(dummyEvent);
+      }, 1500);
+    } else {
+      setPassphraseError(true);
+      setPassphraseSuccess(false);
+    }
+    
+    // API呼び出しはコメントアウト
+    // verifyPassphraseMutation.mutate(passphrase);
   };
   
   const handleConnectWallet = () => {
@@ -119,7 +145,19 @@ export default function ParticipantCard({
   
   const handleMintNft = () => {
     setIsMinting(true);
-    mintNftMutation.mutate();
+    
+    // ダミー実装: ミント処理の遅延をシミュレート
+    setTimeout(() => {
+      setIsMinting(false);
+      setMintSuccess(true);
+      
+      // ダミーのトランザクションID
+      const mockTxId = "0x" + Math.random().toString(16).slice(2, 62);
+      onNFTMinted(mockTxId);
+    }, 2500);
+    
+    // API呼び出しはコメントアウト
+    // mintNftMutation.mutate();
   };
   
   // Helper to get step title

@@ -42,16 +42,16 @@ export default function EventForm({ onEventRegistered }: EventFormProps) {
   const form = useForm<z.infer<typeof eventFormSchema>>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
-      eventName: "",
-      eventDetails: "",
-      mintStartDate: new Date(),
-      mintEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
+      eventName: "Tech Conference 2025",
+      eventDetails: "最新技術のカンファレンスです。参加者には限定NFTが発行されます。",
+      mintStartDate: new Date("2025/04/20 10:00"),
+      mintEndDate: new Date("2025/04/30 18:00"),
       mintLimit: 10,
       gasSponsored: true,
       transferable: false,
-      passphrase: "",
-      nftName: "",
-      nftDescription: "",
+      passphrase: "aikotoba",
+      nftName: "Tech Conference 2025 参加証",
+      nftDescription: "このNFTは2025年テクノロジーカンファレンスへの参加を証明するものです。",
       nftImageUrl: "",
       nftAnimationUrl: "",
     },
