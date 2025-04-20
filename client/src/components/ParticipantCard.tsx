@@ -194,12 +194,11 @@ export default function ParticipantCard({
           // トランザクションを作成
           const tx = await mintEventNFT(
             eventIdOnChain,
-            walletAddress,
             null, // 実行は executeSponsoredTx で行うため null を渡す
             true  // トランザクション作成のみ
           );
           
-          if (tx) {
+          if (tx && typeof tx !== 'string' && 'moveCall' in tx) {
             // スポンサードトランザクションとして実行
             const txId = await executeSponsoredTx(tx);
             if (!txId) {
@@ -213,7 +212,7 @@ export default function ParticipantCard({
           toast({
             title: "スポンサートランザクション失敗",
             description: "通常のトランザクションに切り替えます。ガス代が必要です。",
-            variant: "warning",
+            variant: "destructive",
           });
         }
       }
@@ -223,11 +222,11 @@ export default function ParticipantCard({
         // Suiブロックチェーンにトランザクションを送信
         const result = await mintEventNFT(
           eventIdOnChain,
-          walletAddress,
           wallet.executeTransaction
         );
         
-        if (result && result.transactionId) {
+        // Transaction型ではない場合のみ処理（結果オブジェクトの場合）
+        if (result && typeof result !== 'string' && !('moveCall' in result) && 'success' in result && result.transactionId) {
           setMintSuccess(true);
           onNFTMinted(result.transactionId);
           return;

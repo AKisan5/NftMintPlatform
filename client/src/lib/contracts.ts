@@ -102,11 +102,16 @@ export async function verifyPassphrase(
 
 /**
  * イベントNFTをミントする関数
+ * @param eventId イベントID
+ * @param executeTransaction トランザクション実行関数（nullの場合はトランザクションのみ作成）
+ * @param createOnly トランザクション作成のみモード
+ * @returns トランザクション結果またはトランザクションオブジェクト
  */
 export async function mintEventNFT(
   eventId: string,
-  executeTransaction: (transaction: Transaction) => Promise<any>
-): Promise<{ success: boolean; transactionId: string | null }> {
+  executeTransaction: ((transaction: Transaction) => Promise<any>) | null,
+  createOnly: boolean = false
+): Promise<{ success: boolean; transactionId: string | null } | Transaction> {
   try {
     // トランザクションオブジェクトを作成
     const tx = new Transaction();
@@ -117,6 +122,11 @@ export async function mintEventNFT(
         tx.object(eventId),                        // event_id
       ],
     });
+
+    // トランザクション作成のみモード
+    if (createOnly || !executeTransaction) {
+      return tx;
+    }
 
     // トランザクションを実行
     const result = await executeTransaction(tx);
