@@ -1,0 +1,11 @@
+[package]
+name = "event_nft"
+version = "0.1.0"
+published-at = "0x0"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet" }
+
+[addresses]
+event_nft = "0x0"
+sui = "0000000000000000000000000000000000000000000000000000000000000002"

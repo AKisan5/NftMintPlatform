@@ -30,11 +30,7 @@ export const useWallet = () => {
   }, [currentAccount]);
 
   // トランザクション実行用関数
-  const executeTransaction = useCallback(async (
-    target: string,
-    method: string,
-    args: any[] = []
-  ) => {
+  const executeTransaction = useCallback(async (tx: Transaction) => {
     if (!isConnected || !currentWallet) {
       toast({
         title: 'ウォレット未接続',
@@ -47,16 +43,9 @@ export const useWallet = () => {
     try {
       setIsConnecting(true);
       
-      // トランザクション作成
-      const tx = new Transaction();
-      tx.moveCall({
-        target: `${target}::event_manager::${method}`,
-        arguments: args
-      });
-      
       // トランザクションを実行
-      const result = await currentWallet.signAndExecuteTransaction({
-        transaction: tx,
+      const result = await currentWallet.signAndExecuteTransactionBlock({
+        transactionBlock: tx,
       });
       
       toast({

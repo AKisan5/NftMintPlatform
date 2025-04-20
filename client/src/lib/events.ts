@@ -1,53 +1,26 @@
 import { suiClient } from './suiClient';
 import { Transaction } from '@mysten/sui/transactions';
 import { Event } from '@shared/schema';
-
-// パッケージIDとモジュール名（あくまでもサンプル。実際のデプロイ後のID等に変更する必要があります）
-const PACKAGE_ID = '0x0'; // 実際のコントラクトがデプロイされたら更新
-const MODULE_NAME = 'event_manager';
+import { 
+  createEvent, 
+  mintEventNFT as mintNFT, 
+  verifyPassphrase, 
+  getEventInfo 
+} from './contracts';
 
 // イベントをオンチェーンに登録する関数
 export async function registerEventOnChain(
   senderAddress: string,
   event: Event,
-  executeTransaction: (target: string, method: string, args: any[]) => Promise<any>
+  executeTransaction: (transaction: Transaction) => Promise<any>
 ) {
   try {
-    // イベントデータをオンチェーン用に変換
-    const eventData = {
-      name: event.eventName,
-      details: event.eventDetails,
-      start_date: event.mintStartDate.getTime().toString(),
-      end_date: event.mintEndDate.getTime().toString(),
-      mint_limit: event.mintLimit.toString(),
-      gas_sponsored: event.gasSponsored,
-      transferable: event.transferable,
-      nft_name: event.nftName,
-      nft_description: event.nftDescription,
-      passphrase: event.passphrase,
-    };
-
-    // トランザクション実行
-    const txResult = await executeTransaction(
-      PACKAGE_ID,
-      'create_event',
-      [
-        eventData.name,
-        eventData.details,
-        eventData.start_date,
-        eventData.end_date,
-        eventData.mint_limit,
-        eventData.gas_sponsored,
-        eventData.transferable,
-        eventData.nft_name,
-        eventData.nft_description,
-        eventData.passphrase,
-      ]
-    );
+    // コントラクトモジュールを使用してイベントを作成
+    const result = await createEvent(event, executeTransaction);
 
     return {
-      success: !!txResult,
-      transactionId: txResult?.digest || null,
+      success: result.success,
+      transactionId: result.transactionId,
       eventId: event.id
     };
   } catch (error) {
@@ -59,18 +32,20 @@ export async function registerEventOnChain(
 // イベントIDからオンチェーンのイベント情報を取得
 export async function getEventFromChain(eventId: string) {
   try {
-    // オンチェーンからイベント情報を取得する実装
-    // この部分は実際のコントラクトの実装に依存します
-    const events = await suiClient.getObject({
-      id: eventId,
-      options: {
-        showContent: true,
-      },
-    });
-    
-    return events;
+    // コントラクトから最新のイベント情報を取得
+    return await getEventInfo(eventId);
   } catch (error) {
     console.error('Error getting event from chain:', error);
+    throw error;
+  }
+}
+
+// 合言葉を検証する関数
+export async function verifyEventPassphrase(passphrase: string) {
+  try {
+    return await verifyPassphrase(passphrase);
+  } catch (error) {
+    console.error('Error verifying passphrase:', error);
     throw error;
   }
 }
@@ -79,19 +54,15 @@ export async function getEventFromChain(eventId: string) {
 export async function mintEventNFT(
   eventId: string,
   walletAddress: string,
-  executeTransaction: (target: string, method: string, args: any[]) => Promise<any>
+  executeTransaction: (transaction: Transaction) => Promise<any>
 ) {
   try {
-    // オンチェーンでのNFTミント処理
-    const txResult = await executeTransaction(
-      PACKAGE_ID,
-      'mint_event_nft',
-      [eventId]
-    );
+    // コントラクトを使用してNFTをミント
+    const result = await mintNFT(eventId, executeTransaction);
     
     return {
-      success: !!txResult,
-      transactionId: txResult?.digest || null,
+      success: result.success,
+      transactionId: result.transactionId,
     };
   } catch (error) {
     console.error('Error minting NFT:', error);

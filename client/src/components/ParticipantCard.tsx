@@ -139,18 +139,34 @@ export default function ParticipantCard({
     onWalletConnected(walletAddress);
   };
   
+  // NFTミント関数
   const handleMintNft = async () => {
     setIsMinting(true);
     
     try {
-      // 本実装では以下を使用
-      // import { mintEventNFT } from '@/lib/events';
-      // const { executeTransaction } = useWallet();
-      // const result = await mintEventNFT(
-      //   event?.id?.toString() || '0',
-      //   walletAddress,
-      //   executeTransaction
-      // );
+      if (!event?.id) {
+        throw new Error('イベントIDが見つかりません');
+      }
+      
+      // フェーズ2：以下のコメントを解除して実際のコントラクト呼び出しを有効化
+      /*
+      import { mintEventNFT } from '@/lib/events';
+      import { useWallet } from '@/hooks/useWallet';
+      
+      const { executeTransaction } = useWallet();
+      const result = await mintEventNFT(
+        event.id.toString(),
+        walletAddress,
+        executeTransaction
+      );
+      
+      if (result.success && result.transactionId) {
+        setMintSuccess(true);
+        onNFTMinted(result.transactionId);
+      } else {
+        throw new Error('ミントに失敗しました');
+      }
+      */
       
       // ダミー実装: ミント処理の遅延をシミュレート
       await new Promise(resolve => setTimeout(resolve, 2500));
