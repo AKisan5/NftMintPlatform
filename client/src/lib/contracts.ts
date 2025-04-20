@@ -4,12 +4,12 @@ import { Event } from '@shared/schema';
 import { suiClient } from './suiClient';
 
 // プロジェクトアドレスと発行後のパッケージIDを設定
-// 実際のデプロイ後に更新する必要があります
+// これはテスト用の仮想的なIDです。実際のデプロイではこれらを実際の値に置き換える必要があります
 export const CONTRACT_CONFIG = {
-  PACKAGE_ID: '0x0', // 実際のパッケージIDに更新する必要があります
+  PACKAGE_ID: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // 仮想的なパッケージID
   EVENT_MODULE: 'event',
   NFT_MODULE: 'nft',
-  EVENT_MANAGER_ID: '0x0', // 実際のイベントマネージャーIDに更新する必要があります
+  EVENT_MANAGER_ID: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890', // 仮想的なイベントマネージャーID
 };
 
 /**
