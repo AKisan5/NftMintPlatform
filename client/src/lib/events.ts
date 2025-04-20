@@ -1,5 +1,5 @@
 import { suiClient } from './suiClient';
-import { TransactionBlock } from '@mysten/sui/transactions';
+import { Transaction } from '@mysten/sui/transactions';
 import { Event } from '@shared/schema';
 
 // パッケージIDとモジュール名（あくまでもサンプル。実際のデプロイ後のID等に変更する必要があります）

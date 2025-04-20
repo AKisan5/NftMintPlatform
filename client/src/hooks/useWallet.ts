@@ -1,13 +1,16 @@
 import { 
-  useWallets,
+  useCurrentAccount,
+  useCurrentWallet,
   ConnectButton, 
   ConnectModal
 } from '@mysten/dapp-kit';
-import { useMemo, useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Transaction } from '@mysten/sui/transactions';
 
 export const useWallet = () => {
-  const { wallets, currentWallet } = useWallets();
+  const currentAccount = useCurrentAccount();
+  const currentWallet = useCurrentWallet();
   const [isConnecting, setIsConnecting] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -15,19 +18,16 @@ export const useWallet = () => {
 
   // ウォレット接続状態の管理
   useEffect(() => {
-    const account = currentWallet?.accounts[0];
-    if (account) {
-      setWalletAddress(account.address);
+    if (currentAccount) {
+      setWalletAddress(currentAccount.address);
       setIsConnected(true);
     } else {
       setWalletAddress(null);
       setIsConnected(false);
     }
     
-    if (currentWallet) {
-      setIsConnecting(false);
-    }
-  }, [currentWallet]);
+    setIsConnecting(false);
+  }, [currentAccount]);
 
   // トランザクション実行用関数
   const executeTransaction = useCallback(async (
@@ -48,17 +48,11 @@ export const useWallet = () => {
       setIsConnecting(true);
       
       // トランザクション作成
-      const tx = {
-        kind: 'moveCall',
-        data: {
-          packageObjectId: target,
-          module: 'event_manager',
-          function: method,
-          typeArguments: [],
-          arguments: args,
-          gasBudget: 10000000,
-        },
-      };
+      const tx = new Transaction();
+      tx.moveCall({
+        target: `${target}::event_manager::${method}`,
+        arguments: args
+      });
       
       // トランザクションを実行
       const result = await currentWallet.signAndExecuteTransaction({
@@ -82,14 +76,14 @@ export const useWallet = () => {
     } finally {
       setIsConnecting(false);
     }
-  }, [isConnected, currentAccount, signAndExecuteTransaction, toast]);
+  }, [isConnected, currentWallet, toast]);
 
   // 接続状態、アドレス、実行関数を返す
   return {
     isConnected,
     isConnecting,
     walletAddress,
-    currentAccount,
+    account: currentAccount,
     executeTransaction,
     ConnectButton,
     ConnectModal,

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Event } from "@shared/schema";
+import WalletConnector from "./WalletConnector";
 
 type ParticipantCardProps = {
   step: string;
@@ -132,15 +133,10 @@ export default function ParticipantCard({
     // verifyPassphraseMutation.mutate(passphrase);
   };
   
-  const handleConnectWallet = () => {
-    setIsConnectingWallet(true);
-    
-    // In a real implementation, this would connect to a blockchain wallet
-    setTimeout(() => {
-      setIsConnectingWallet(false);
-      const mockWalletAddress = "0x" + Math.random().toString(16).slice(2, 42);
-      onWalletConnected(mockWalletAddress);
-    }, 2000);
+  // ウォレット接続ハンドラー
+  const handleConnectWallet = (walletAddress: string) => {
+    setIsConnectingWallet(false);
+    onWalletConnected(walletAddress);
   };
   
   const handleMintNft = () => {

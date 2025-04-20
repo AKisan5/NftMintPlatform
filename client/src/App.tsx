@@ -10,7 +10,6 @@ import Home from "@/pages/Home";
 
 // Sui Wallet プロバイダーのインポート
 import { 
-  WalletKitProvider, 
   SuiClientProvider,
   WalletProvider
 } from '@mysten/dapp-kit';
